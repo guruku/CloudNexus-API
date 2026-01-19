@@ -58,7 +58,7 @@ class Task(Base):
 def get_database_url() -> str:
     """
     Construct database URL from environment variables.
-    Supports PostgreSQL (default) and MySQL.
+    Supports PostgreSQL with pg8000 (default) and MySQL.
     """
     db_host = os.environ.get("DB_HOST", "localhost")
     db_port = os.environ.get("DB_PORT", "5432")
@@ -70,8 +70,8 @@ def get_database_url() -> str:
     if db_driver == "mysql":
         return f"mysql+pymysql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
     
-    # Default to PostgreSQL
-    return f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
+    # Default to PostgreSQL with pg8000 driver (pure Python, no Lambda Layer needed)
+    return f"postgresql+pg8000://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
 
 
 def create_db_engine(max_retries: int = 3, retry_delay: float = 1.0):
@@ -97,10 +97,9 @@ def create_db_engine(max_retries: int = 3, retry_delay: float = 1.0):
         "pool_size": 5,                  # Maintain 5 connections in pool
         "max_overflow": 10,              # Allow up to 10 additional connections
         
-        # Connection timeout settings
+        # Connection timeout settings for pg8000
         "connect_args": {
-            "connect_timeout": 10,       # 10 second connection timeout
-            "options": "-c statement_timeout=30000"  # 30 second query timeout
+            "timeout": 10  # 10 second connection timeout
         }
     }
     
