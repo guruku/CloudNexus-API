@@ -10,6 +10,72 @@ This document provides deployment instructions for the CloudNexus API on AWS Lam
 
 ---
 
+## ⚠️ AWS Academy Learner Lab - Deployment Guide
+
+> **Important**: Jika menggunakan AWS Academy Learner Lab, ikuti panduan khusus di section ini untuk menghindari error permission.
+
+### Layanan yang Didukung
+
+| Layanan | Status | Catatan |
+|---------|--------|---------|
+| AWS Lambda | ✅ Didukung | Gunakan `LabRole` |
+| Amazon RDS | ✅ Didukung | Dengan batasan tertentu |
+| Amazon S3 | ✅ Didukung | - |
+| API Gateway | ✅ Didukung | - |
+| VPC | ✅ Didukung | - |
+| IAM Custom Role | ❌ Tidak Didukung | Gunakan `LabRole` yang tersedia |
+
+### Batasan RDS di Learner Lab
+
+| Aspek | Batasan | Rekomendasi |
+|-------|---------|-------------|
+| **Instance Type** | nano, micro, small, medium, large | `db.t3.micro` |
+| **Storage Type** | Hanya gp2 (General Purpose SSD) | gp2, 20GB |
+| **Storage Max** | 100GB | 20GB untuk hemat budget |
+| **Multi-AZ** | ❌ TIDAK DIDUKUNG | Single-AZ only |
+| **Enhanced Monitoring** | ❌ HARUS DIMATIKAN | Uncheck saat create |
+| **PIOPS** | ❌ Tidak didukung | Jangan pilih |
+| **Region** | us-east-1 atau us-west-2 | us-east-1 |
+
+### ✅ Checklist Create RDS (AWS Academy)
+
+Saat membuat RDS instance, pastikan setting berikut:
+
+```
+1. [✓] Engine: PostgreSQL
+2. [✓] Engine Version: PostgreSQL 14.x atau 15.x
+3. [✓] Templates: Free tier
+4. [✓] DB Instance Class: db.t3.micro
+5. [✓] Storage Type: General Purpose SSD (gp2)
+6. [✓] Allocated Storage: 20 GB
+7. [✓] Multi-AZ deployment: NO (Do not create a standby instance)
+8. [✓] Enhanced Monitoring: DISABLED ← PENTING!
+9. [✓] Public Access: Yes (jika Lambda tidak di VPC yang sama)
+10. [✓] Region: us-east-1
+```
+
+> **⚠️ Common Error**: Jika muncul error "You are not authorized", kemungkinan besar **Enhanced Monitoring masih aktif** atau **Multi-AZ dipilih**.
+
+### Lambda Configuration (AWS Academy)
+
+Gunakan `LabRole` yang sudah tersedia:
+
+| Setting | Value |
+|---------|-------|
+| Execution Role | **LabRole** (existing) |
+| Runtime | Python 3.11 |
+| Memory | 512 MB |
+| Timeout | 30 seconds |
+
+### Tips Menghemat Budget
+
+1. **Stop RDS** saat tidak digunakan (RDS akan auto-restart setelah 7 hari)
+2. **Delete RDS** jika tidak dipakai dalam waktu lama
+3. Budget Lab: ~$100, RDS cukup mahal, monitor usage
+4. Sesi Lab berakhir setelah ~4 jam, restart untuk melanjutkan
+
+---
+
 ## 1. VPC Security Groups
 
 ### Lambda Security Group
@@ -35,9 +101,14 @@ Configure the RDS security group to allow Lambda access:
 
 ## 2. IAM Role & Policies
 
-### Lambda Execution Role
+> [!WARNING]
+> **AWS Academy Learner Lab**: Skip membuat IAM role custom! Gunakan **`LabRole`** yang sudah tersedia.
+> `LabRole` sudah memiliki permissions untuk Lambda, S3, VPC, RDS, dan CloudWatch.
+> Langsung lanjut ke Section 3 (Environment Variables).
 
-Create an IAM role with the following policies:
+### Lambda Execution Role (Non-Academy / Production)
+
+Untuk akun AWS reguler (bukan Academy), create an IAM role with the following policies:
 
 #### Basic Execution (Required)
 ```json
