@@ -1,8 +1,9 @@
 # CloudNexus API Dependencies
 # FastAPI Backend for AWS Lambda
 
-# Web Framework
-fastapi>=0.109.0
+# Web Framework (Pydantic v1 compatible - pure Python)
+fastapi==0.99.1
+pydantic==1.10.13
 mangum>=0.17.0
 
 # Database

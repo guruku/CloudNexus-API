@@ -67,7 +67,7 @@ class TaskCreate(BaseModel):
     status: str = Field("pending", description="Task status: pending, in_progress, completed")
 
     class Config:
-        json_schema_extra = {
+        schema_extra = {
             "example": {
                 "title": "Complete project documentation",
                 "description": "Write comprehensive API documentation",
@@ -87,7 +87,7 @@ class TaskResponse(BaseModel):
     is_active: bool
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 class HealthResponse(BaseModel):
