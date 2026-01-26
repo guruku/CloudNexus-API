@@ -9,7 +9,8 @@ import logging
 from datetime import datetime
 from typing import List, Optional
 
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Query
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Query, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -138,6 +139,28 @@ async def shutdown_event():
 
 
 # =============================================================================
+# AUTHENTICATION
+# =============================================================================
+
+security = HTTPBearer()
+
+def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """
+    Verify the Bearer token against the server-side secret.
+    """
+    token = credentials.credentials
+    expected_token = os.environ.get("API_TOKEN", "simulated-secret-token-lks-2025")
+    
+    if token != expected_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return token
+
+
+# =============================================================================
 # API ROUTES
 # =============================================================================
 
@@ -229,7 +252,8 @@ async def get_items(
 )
 async def create_item(
     task: TaskCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    token: str = Depends(verify_token)
 ):
     """
     Create a new task record in the database.
@@ -308,7 +332,8 @@ async def get_item(
     summary="Upload a file to S3"
 )
 async def upload_file(
-    file: UploadFile = File(..., description="File to upload")
+    file: UploadFile = File(..., description="File to upload"),
+    token: str = Depends(verify_token)
 ):
     """
     Upload a file to S3 bucket.
@@ -378,7 +403,8 @@ async def upload_file(
     summary="Trigger manual backup"
 )
 async def trigger_backup(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    token: str = Depends(verify_token)
 ):
     """
     Trigger a manual backup of the tasks table.

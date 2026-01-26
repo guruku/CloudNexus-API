@@ -13,18 +13,21 @@ A robust Python Backend API for mobile applications, built with FastAPI and opti
 - 📦 **S3 Storage** - File upload and backup functionality
 - 🔄 **Cold Start Optimized** - Retry logic with exponential backoff
 - 📊 **CloudWatch Logging** - Structured logs for monitoring
-- 🔒 **CORS Enabled** - Ready for mobile/web clients
+- 🔒 **Secure Authentication** - Bearer Token verification for critical operations
+- 🌐 **CORS Enabled** - Ready for mobile/web clients
 
 ## API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/health` | Health check with RDS connectivity test |
-| GET | `/items` | Fetch all tasks (pagination & filtering) |
-| POST | `/items` | Create a new task |
-| GET | `/items/{id}` | Get specific task by ID |
-| POST | `/upload` | Upload file to S3 bucket |
-| POST | `/backup` | Backup tasks table to S3 |
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/health` | Health check with RDS connectivity test | Public |
+| GET | `/items` | Fetch all tasks (pagination & filtering) | Public |
+| GET | `/items/{id}` | Get specific task by ID | Public |
+| POST | `/items` | Create a new task | **Lock** |
+| POST | `/upload` | Upload file to S3 bucket | **Lock** |
+| POST | `/backup` | Backup tasks table to S3 | **Lock** |
+
+**Note**: Endpoints marked with **Lock** require `Authorization: Bearer <token>` header.
 
 ## Quick Start
 
@@ -62,6 +65,7 @@ export DB_USER=postgres
 export DB_PASS=your_password
 export S3_BUCKET=your-bucket-name
 export AWS_REGION=us-east-1
+export API_TOKEN=simulated-secret-token-lks-2025
 ```
 
 ### Run Locally
